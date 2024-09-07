@@ -21,10 +21,9 @@ git checkout -b "${gops_version}" "${gops_version}"
 git --no-pager remote -v
 git --no-pager log -1
 
-for arch in amd64 arm64 ; do
+for arch in loong64 ; do
   mkdir -p "/out/linux/${arch}/bin"
   GOARCH="${arch}" CGO_ENABLED=0 go build -ldflags "-s -w" -o "/out/linux/${arch}/bin/gops" github.com/google/gops
 done
 
-x86_64-linux-gnu-strip /out/linux/amd64/bin/gops
-aarch64-linux-gnu-strip /out/linux/arm64/bin/gops
+loongarch64-linux-gnu-strip /out/linux/loong64/bin/gops

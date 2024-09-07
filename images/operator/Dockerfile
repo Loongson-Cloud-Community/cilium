@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ARG BASE_IMAGE=scratch
-ARG GOLANG_IMAGE=docker.io/library/golang:1.21.9@sha256:7d0dcbe5807b1ad7272a598fbf9d7af15b5e2bed4fd6c4c2b5b3684df0b317dd
-ARG ALPINE_IMAGE=docker.io/library/alpine:3.19.1@sha256:c5b1261d6d3e43071626931fc004f70149baeba2c8ec672bd4f27761f8e1ad6b
-ARG CILIUM_BUILDER_IMAGE=quay.io/cilium/cilium-builder:a99870a74ec7599cd18c2c36081ff7ae5f8fc82b@sha256:85db788e7c5630dccc7a05aa33e0e2e5b1c53943529c4305d939cc5c6e64caa5
+ARG GOLANG_IMAGE=cr.loongnix.cn/library/golang:1.21
+ARG ALPINE_IMAGE=cr.loongnix.cn/library/alpine:3.11
+ARG CILIUM_BUILDER_IMAGE=cr.loongnix.cn/cilium/cilium-builder:a99870a74ec7599cd18c2c36081ff7ae5f8fc82b
 
 # BUILDPLATFORM is an automatic platform ARG enabled by Docker BuildKit.
 # Represents the plataform where the build is happening, do not mix with
 # TARGETARCH
-FROM --platform=${BUILDPLATFORM} ${GOLANG_IMAGE} as builder
+FROM ${GOLANG_IMAGE} as builder
 
 # TARGETOS is an automatic platform ARG enabled by Docker BuildKit.
 ARG TARGETOS
@@ -39,17 +39,17 @@ RUN --mount=type=bind,readwrite,target=/go/src/github.com/cilium/cilium \
 # BUILDPLATFORM is an automatic platform ARG enabled by Docker BuildKit.
 # Represents the plataform where the build is happening, do not mix with
 # TARGETARCH
-FROM --platform=${BUILDPLATFORM} ${ALPINE_IMAGE} as certs
+FROM ${ALPINE_IMAGE} as certs
 RUN apk --update add ca-certificates
 
 # BUILDPLATFORM is an automatic platform ARG enabled by Docker BuildKit.
 # Represents the plataform where the build is happening, do not mix with
 # TARGETARCH
-FROM --platform=${BUILDPLATFORM} ${GOLANG_IMAGE} as gops
+FROM ${GOLANG_IMAGE} as gops
 
 # build-gops.sh will build both archs at the same time
 WORKDIR /go/src/github.com/cilium/cilium/images/runtime
-RUN apt-get update && apt-get install -y binutils-aarch64-linux-gnu binutils-x86-64-linux-gnu
+RUN apt-get update && apt-get install -y binutils-loongarch64-linux-gnu
 RUN --mount=type=bind,readwrite,target=/go/src/github.com/cilium/cilium \
     --mount=type=cache,target=/root/.cache \
     --mount=type=cache,target=/go/pkg \
@@ -70,7 +70,7 @@ WORKDIR /
 ENV GOPS_CONFIG_DIR=/
 CMD ["/usr/bin/cilium-${OPERATOR_VARIANT}"]
 
-FROM --platform=${BUILDPLATFORM} ${CILIUM_BUILDER_IMAGE} as debug-tools
+FROM ${CILIUM_BUILDER_IMAGE} as debug-tools
 
 #
 # Cilium Operator debug image.

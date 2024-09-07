@@ -96,7 +96,7 @@ do_test="${TEST:-false}"
 run_buildx() {
   build_args=(
     "--platform=${platform}"
-    "--builder=${builder}"
+   # "--builder=${builder}"
     "--target=release"
     "--file=${image_dir}/Dockerfile"
   )
@@ -106,11 +106,11 @@ run_buildx() {
     build_args+=("${root_dir}")
   fi
   if [ "${do_test}" = "true" ] ; then
-    if ! docker buildx build --target=test "${build_args[@]}" ; then
+    if ! docker buildx build --target=test --build-arg http_proxy=$http_proxy --build-arg https_proxy=$https_proxy "${build_args[@]}" ; then
       exit 1
     fi
   fi
-  docker buildx build --output="${output}" "${tag_args[@]}" "${build_args[@]}"
+  docker buildx build --output="${output}" --build-arg http_proxy=$http_proxy --build-arg https_proxy=$https_proxy "${tag_args[@]}" "${build_args[@]}"
 }
 
 if [ "${do_build}" = "true" ] ; then
@@ -118,7 +118,7 @@ if [ "${do_build}" = "true" ] ; then
   set -o xtrace
   if ! run_buildx ; then
     if [ -n "${DEBUG+x}" ] ; then
-      buildkitd_container="$(docker ps --filter "ancestor=moby/buildkit:buildx-stable-1" --filter "name=${builder}" --format "{{.ID}}")"
+      buildkitd_container="$(docker ps --filter "ancestor=cr.loongnix.cn/library/buildkit:0.12.3" --filter "name=${builder}" --format "{{.ID}}")"
       docker logs "${buildkitd_container}"
     fi
     exit 1

@@ -1,11 +1,11 @@
 # Copyright Authors of Cilium
 # SPDX-License-Identifier: Apache-2.0
 
-ARG COMPILERS_IMAGE=quay.io/cilium/image-compilers:5569a29cea6b3ad50aeb03102aaf3dc03841197c@sha256:b15dbedb7c49816c74a765e2f6ecdb9359763b8e4e4328d794f48b9cefae9804
-ARG CILIUM_RUNTIME_IMAGE=quay.io/cilium/cilium-runtime:4e59d5fc1807e4c11843adab3ccf7b50352f2bf0@sha256:88f2bf7cf50fe2ca2c361c2a4c3bc39bca0337d71af758662c90a20fdcdfdae3
-ARG TESTER_IMAGE=quay.io/cilium/image-tester:dd09c8d3ef349a909fbcdc99279516baef153f22@sha256:c056d064cb47c97acd607343db5457e1d49d9338d6d8a87e93e23cc93f052c73
-ARG GOLANG_IMAGE=docker.io/library/golang:1.21.9@sha256:7d0dcbe5807b1ad7272a598fbf9d7af15b5e2bed4fd6c4c2b5b3684df0b317dd
-ARG CILIUM_LLVM_IMAGE=quay.io/cilium/cilium-llvm:a8c542efc076b62ba683e7699c0013adb6955f0f@sha256:38e8941107bd19eb30bdde6e478760a22325f38d1f2771dfd1b9af81d74235e7
+ARG COMPILERS_IMAGE=cr.loongnix.cn/cilium/image-compilers:5569a29cea6b3ad50aeb03102aaf3dc03841197c
+ARG CILIUM_RUNTIME_IMAGE=cr.loongnix.cn/cilium/cilium-runtime:4e59d5fc1807e4c11843adab3ccf7b50352f2bf0
+ARG TESTER_IMAGE=cr.loongnix.cn/cilium/image-tester:dd09c8d3ef349a909fbcdc99279516baef153f22
+ARG GOLANG_IMAGE=cr.loongnix.cn/library/golang:1.21
+ARG CILIUM_LLVM_IMAGE=cr.loongnix.cn/cilium/cilium-llvm:a8c542efc076b62ba683e7699c0013adb6955f0f
 
 FROM ${COMPILERS_IMAGE} as compilers-image
 
@@ -26,14 +26,14 @@ RUN \
     apt-get upgrade -y --no-install-recommends && \
     apt-get install -y --no-install-recommends \
       # Install cross tools for both arm64 on amd64
-      gcc-aarch64-linux-gnu \
-      g++-aarch64-linux-gnu \
-      libc6-dev-arm64-cross \
-      binutils-aarch64-linux-gnu \
-      gcc-x86-64-linux-gnu \
-      g++-x86-64-linux-gnu \
-      libc6-dev-amd64-cross \
-      binutils-x86-64-linux-gnu \
+      #gcc-aarch64-linux-gnu \
+      #g++-aarch64-linux-gnu \
+      #libc6-dev-arm64-cross \
+      #binutils-aarch64-linux-gnu \
+      #gcc-x86-64-linux-gnu \
+      #g++-x86-64-linux-gnu \
+      #libc6-dev-amd64-cross \
+      binutils-loongarch64-linux-gnu \
       # Dependencies to unzip protoc
       unzip \
       # Base Cilium-build dependencies
@@ -44,11 +44,11 @@ RUN \
       git \
       libc6-dev \
       make && \
-    apt-get purge --auto-remove && \
+    #apt-get purge --auto-remove && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY --from=compilers-image /usr/lib/aarch64-linux-gnu /usr/lib/aarch64-linux-gnu
+COPY --from=compilers-image /usr/lib/loongarch64-linux-gnu /usr/lib/loongarch64-linux-gnu
 
 COPY --from=golang-dist /usr/local/go /usr/local/go
 RUN mkdir -p /go
@@ -56,7 +56,7 @@ ENV GOROOT /usr/local/go
 ENV GOPATH /go
 ENV PATH "${GOROOT}/bin:${GOPATH}/bin:${PATH}"
 
-RUN CGO_ENABLED=0 go install github.com/go-delve/delve/cmd/dlv@latest
+#RUN CGO_ENABLED=0 go install github.com/go-delve/delve/cmd/dlv@latest
 
 WORKDIR /go/src/github.com/cilium/cilium/images/builder
 RUN --mount=type=bind,readwrite,target=/go/src/github.com/cilium/cilium/images/builder \

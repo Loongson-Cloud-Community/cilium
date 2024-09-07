@@ -1,21 +1,21 @@
 # Copyright Authors of Cilium
 # SPDX-License-Identifier: Apache-2.0
 
-ARG CILIUM_BUILDER_IMAGE=quay.io/cilium/cilium-builder:a99870a74ec7599cd18c2c36081ff7ae5f8fc82b@sha256:85db788e7c5630dccc7a05aa33e0e2e5b1c53943529c4305d939cc5c6e64caa5
-ARG CILIUM_RUNTIME_IMAGE=quay.io/cilium/cilium-runtime:4e59d5fc1807e4c11843adab3ccf7b50352f2bf0@sha256:88f2bf7cf50fe2ca2c361c2a4c3bc39bca0337d71af758662c90a20fdcdfdae3
+ARG CILIUM_BUILDER_IMAGE=cr.loongnix.cn/cilium/cilium-builder:a99870a74ec7599cd18c2c36081ff7ae5f8fc82b
+ARG CILIUM_RUNTIME_IMAGE=cr.loongnix.cn/cilium/cilium-runtime:4e59d5fc1807e4c11843adab3ccf7b50352f2bf0
 
 # cilium-envoy from github.com/cilium/proxy
 #
-FROM quay.io/cilium/cilium-envoy:v1.27.4-21905253931655328edaacf3cd16aeda73bbea2f@sha256:d52f476c29a97c8b250fdbfbb8472191a268916f6a8503671d0da61e323b02cc as cilium-envoy
+FROM cr.loongnix.cn/cilium/cilium-envoy:v1.27.4-21905253931655328edaacf3cd16aeda73bbea2f as cilium-envoy
 
 #
 # Hubble CLI
 #
-FROM --platform=${BUILDPLATFORM} ${CILIUM_BUILDER_IMAGE} as hubble
+FROM ${CILIUM_BUILDER_IMAGE} as hubble
 ARG BUILDPLATFORM
 COPY images/cilium/download-hubble.sh /tmp/download-hubble.sh
 RUN /tmp/download-hubble.sh
-RUN /out/${BUILDPLATFORM}/bin/hubble completion bash > /out/linux/bash_completion
+RUN /out/linux/loong64/bin/hubble completion bash > /out/linux/bash_completion
 
 #
 # Cilium incremental build. Should be fast given builder-deps is up-to-date!
@@ -27,7 +27,7 @@ RUN /out/${BUILDPLATFORM}/bin/hubble completion bash > /out/linux/bash_completio
 # versions to be built while allowing the new versions to make changes
 # that are not backwards compatible.
 #
-FROM --platform=${BUILDPLATFORM} ${CILIUM_BUILDER_IMAGE} as builder
+FROM ${CILIUM_BUILDER_IMAGE} as builder
 
 # TARGETOS is an automatic platform ARG enabled by Docker BuildKit.
 ARG TARGETOS
@@ -89,7 +89,6 @@ COPY --from=hubble /out/linux/bash_completion /etc/bash_completion.d/hubble
 
 COPY --from=builder /tmp/install/${TARGETOS}/${TARGETARCH} /
 WORKDIR /home/cilium
-
 ENV INITSYSTEM="SYSTEMD"
 CMD ["/usr/bin/cilium-dbg"]
 

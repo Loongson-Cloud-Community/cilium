@@ -246,7 +246,7 @@ type Sigset_t struct {
 	Val [16]uint64
 }
 
-const _C__NSIG = 0x41
+const _C__NSIG = 0x80
 
 const (
 	SIG_BLOCK   = 0x0
